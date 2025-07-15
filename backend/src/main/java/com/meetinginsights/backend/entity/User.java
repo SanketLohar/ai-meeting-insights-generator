@@ -1,29 +1,27 @@
-package com.meetinginsights.entity;
+package com.meetinginsights.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "users") // Table name in MySQL
-@Data // From Lombok: includes getters/setters/toString
+@Table(name = "users") // ✅ Maps to the DB table
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto-increment ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private String password; // Stored as BCrypt hash
+    private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role; // USER / ADMIN
+    private Role role; // Make sure Role.java exists in the same package
 }

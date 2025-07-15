@@ -1,6 +1,6 @@
-package com.meetinginsights.repository;
+package com.meetinginsights.backend.repository;
 
-import com.meetinginsights.entity.User;
+import com.meetinginsights.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
