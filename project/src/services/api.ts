@@ -1,9 +1,20 @@
 import axios from 'axios';
 import { AuthResponse, Meeting, MeetingInsights } from '../types';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+// Mock mode for testing - set to false when backend is ready
+const MOCK_MODE = true;
+
+// Mock data for testing
+const mockUsers = [
+  { id: '1', name: 'John Doe', email: 'john@example.com', password: 'password123' }
+];
+
+const mockDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const api = axios.create({
-  baseURL: apiUrl,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,11 +44,48 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
+    if (MOCK_MODE) {
+      await mockDelay(1000); // Simulate network delay
+      
+      const user = mockUsers.find(u => u.email === email && u.password === password);
+      if (!user) {
+        throw new Error('Invalid credentials');
+      }
+      
+      return {
+        token: 'mock-jwt-token-' + Date.now(),
+        user: { id: user.id, name: user.name, email: user.email }
+      };
+    }
+    
     const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
 
   register: async (name: string, email: string, password: string): Promise<AuthResponse> => {
+    if (MOCK_MODE) {
+      await mockDelay(1000); // Simulate network delay
+      
+      // Check if user already exists
+      if (mockUsers.find(u => u.email === email)) {
+        throw new Error('User already exists');
+      }
+      
+      const newUser = {
+        id: Date.now().toString(),
+        name,
+        email,
+        password
+      };
+      
+      mockUsers.push(newUser);
+      
+      return {
+        token: 'mock-jwt-token-' + Date.now(),
+        user: { id: newUser.id, name: newUser.name, email: newUser.email }
+      };
+    }
+    
     const response = await api.post('/auth/register', { name, email, password });
     return response.data;
   },

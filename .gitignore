@@ -1,18 +1,22 @@
-# .gitignore (in ai-meeting-insights-generator/)
-# Ignore node_modules and build folders
-
 # Frontend
-/frontend/node_modules
-/frontend/dist
+/frontend/node_modules/
+/frontend/dist/
 
 # Backend
-/backend/target
+/backend/target/
+/backend/.env
 
-# IDE
+# IDEs and editors
 *.iml
 .idea/
+.vscode/
 
-# Logs and system files
+# Logs
 *.log
+
+# OS-specific
 .DS_Store
+Thumbs.db
+
+# Environment variables
 .env
