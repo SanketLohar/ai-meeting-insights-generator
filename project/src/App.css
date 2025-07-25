@@ -1,0 +1,78 @@
+.layout {
+  min-height: 100vh;
+}
+
+.ant-layout-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  flex: 1;
+}
+
+.hero-section {
+  text-align: center;
+  padding: 60px 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 40px;
+}
+
+.hero-section h1 {
+  color: white !important;
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.hero-section p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 24px;
+  height: 100%;
+}
+
+.feature-card .anticon {
+  font-size: 3rem;
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.generate-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.response-container {
+  margin-top: 24px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-section p {
+    font-size: 1rem;
+  }
+  
+  .page-container {
+    padding: 16px;
+  }
+}
