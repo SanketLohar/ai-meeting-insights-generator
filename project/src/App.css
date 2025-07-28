@@ -1,45 +1,66 @@
-.layout {
+.app-layout {
   min-height: 100vh;
-}
-
-.ant-layout-content {
+  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+.app-content {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  background: #f5f5f5;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
-  flex: 1;
+  padding: 40px 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hero-section {
   text-align: center;
-  padding: 60px 0;
+  padding: 80px 24px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   margin-bottom: 40px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.hero-section h1 {
+.hero-title {
+  font-size: 3rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 16px !important;
   color: white !important;
-  font-size: 3rem;
-  margin-bottom: 16px;
 }
 
-.hero-section p {
-  font-size: 1.2rem;
+.hero-subtitle {
+  font-size: 1.2rem !important;
   opacity: 0.9;
+  color: white !important;
 }
 
 .feature-card {
   text-align: center;
   padding: 24px;
   height: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.feature-card .anticon {
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.feature-icon {
   font-size: 3rem;
   color: #1890ff;
   margin-bottom: 16px;
@@ -48,31 +69,55 @@
 .generate-form {
   max-width: 800px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .response-container {
   margin-top: 24px;
-  padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  min-height: 200px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .loading-container {
-  text-align: center;
-  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.contact-form {
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
-  .hero-section h1 {
-    font-size: 2rem;
+  .hero-title {
+    font-size: 2rem !important;
   }
   
-  .hero-section p {
-    font-size: 1rem;
+  .hero-subtitle {
+    font-size: 1rem !important;
   }
   
   .page-container {
-    padding: 16px;
+    padding: 20px 16px;
+  }
+  
+  .hero-section {
+    padding: 60px 16px;
+  }
+  
+  .generate-form,
+  .contact-form {
+    max-width: 100%;
+    padding: 0 16px;
   }
 }
