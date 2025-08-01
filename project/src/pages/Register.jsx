@@ -16,10 +16,8 @@ const Register = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      const result = await axios.post(
-        'http://localhost:5000/api/auth/register',
-        values
-      );
+      const result = await axios.post('http://localhost:8080/api/auth/register', values);
+
       
       if (result.data.token && result.data.user) {
         login(result.data.user, result.data.token);

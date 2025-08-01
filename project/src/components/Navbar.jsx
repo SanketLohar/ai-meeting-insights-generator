@@ -1,7 +1,12 @@
-import { useState } from 'react';
-import { Layout, Menu, Button, Drawer, Avatar, Dropdown } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
-import { MenuOutlined, BulbOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Layout, Menu, Drawer, Button, Dropdown } from 'antd';
+import {
+  MenuOutlined,
+  LogoutOutlined,
+  UserOutlined,
+  LoginOutlined,
+} from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 
 const { Header } = Layout;
@@ -9,11 +14,12 @@ const { Header } = Layout;
 const Navbar = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/';
+    navigate('/');
   };
 
   const userMenuItems = [
@@ -53,190 +59,92 @@ const Navbar = () => {
   };
 
   return (
-    <Header style={{ 
-      background: '#fff', 
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      padding: '0 24px',
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000
-    }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <BulbOutlined style={{ fontSize: '24px', color: '#1890ff', marginRight: '8px' }} />
-          <Link to="/" style={{ 
-            fontSize: '20px', 
-            fontWeight: 'bold', 
-            color: '#1890ff',
-            textDecoration: 'none'
-          }}>
-            AI Meeting Insights
-          </Link>
-        </div>
-        
-        {/* Desktop Menu */}
+    <Header style={headerStyle}>
+      <div className="logo">
+        <Link to="/" style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
+          Meeting Insights
+        </Link>
+      </div>
+
+      <div className="desktop-menu">
         <Menu
+          theme="dark"
           mode="horizontal"
           selectedKeys={[location.pathname]}
           items={menuItems}
-          style={{ 
-            border: 'none',
-            background: 'transparent',
-            display: 'none'
-          }}
-          className="desktop-menu"
+          style={{ flex: 1 }}
         />
-        
-        {/* Auth Section */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {isAuthenticated() ? (
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="bottomRight"
-              trigger={['click']}
-            >
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                cursor: 'pointer',
-                padding: '4px 8px',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s'
-              }}>
-                <Avatar 
-                  size="small" 
-                  icon={<UserOutlined />} 
-                  style={{ marginRight: '8px' }}
-                />
-                <span style={{ 
-                  fontSize: '14px',
-                  color: '#333',
-                  display: 'none'
-                }} className="desktop-username">
-                  {user?.name || 'User'}
-                </span>
-              </div>
-            </Dropdown>
+
+        {isAuthenticated ? (
+          <Dropdown menu={{ items: userMenuItems }}>
+            <Button icon={<UserOutlined />} style={{ marginLeft: '1rem' }}>
+              {user?.name || 'Account'}
+            </Button>
+          </Dropdown>
+        ) : (
+          <div style={{ marginLeft: '1rem' }}>
+            <Link to="/login">
+              <Button icon={<LoginOutlined />} type="primary" style={{ marginRight: 8 }}>
+                Login
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button>Sign Up</Button>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <Button
+        className="mobile-menu-button"
+        type="text"
+        icon={<MenuOutlined />}
+        onClick={showDrawer}
+        style={{ color: 'white', display: 'none' }}
+      />
+
+      <Drawer
+        title="Menu"
+        placement="right"
+        onClose={onClose}
+        open={drawerVisible}
+        className="mobile-drawer"
+      >
+        <Menu
+          mode="vertical"
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+          onClick={onClose}
+        />
+        <div style={{ marginTop: 16 }}>
+          {isAuthenticated ? (
+            <Button icon={<LogoutOutlined />} danger onClick={handleLogout}>
+              Logout
+            </Button>
           ) : (
-            <div style={{ display: 'flex', gap: '8px' }} className="desktop-auth-buttons">
+            <>
               <Link to="/login">
-                <Button type="primary" size="small">
+                <Button type="primary" icon={<LoginOutlined />} block style={{ marginBottom: 8 }}>
                   Login
                 </Button>
               </Link>
-              <Link to="/register">
-                <Button size="small">
-                  Sign Up
-                </Button>
+              <Link to="/signup">
+                <Button block>Sign Up</Button>
               </Link>
-            </div>
+            </>
           )}
         </div>
-        
-        {/* Mobile Menu Button */}
-        <Button
-          type="text"
-          icon={<MenuOutlined />}
-          onClick={showDrawer}
-          className="mobile-menu-button"
-          style={{ display: 'none' }}
-        />
-        
-        {/* Mobile Drawer */}
-        <Drawer
-          title="Menu"
-          placement="right"
-          onClose={onClose}
-          open={drawerVisible}
-          width={250}
-        >
-          <Menu
-            mode="vertical"
-            selectedKeys={[location.pathname]}
-            items={menuItems}
-            style={{ border: 'none', marginBottom: '24px' }}
-            onClick={onClose}
-          />
-          
-          {/* Mobile Auth Section */}
-          <div style={{ padding: '0 24px' }}>
-            {isAuthenticated() ? (
-              <div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  marginBottom: '16px',
-                  padding: '12px',
-                  background: '#f5f5f5',
-                  borderRadius: '8px'
-                }}>
-                  <Avatar 
-                    icon={<UserOutlined />} 
-                    style={{ marginRight: '12px' }}
-                  />
-                  <span style={{ fontWeight: '500' }}>
-                    {user?.name || 'User'}
-                  </span>
-                </div>
-                <Button 
-                  block 
-                  icon={<LogoutOutlined />}
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <Link to="/login" onClick={onClose}>
-                  <Button type="primary" block>
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/register" onClick={onClose}>
-                  <Button block>
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </Drawer>
-      </div>
-      
-      <style jsx>{`
-        @media (min-width: 768px) {
-          .desktop-menu {
-            display: flex !important;
-          }
-          .desktop-username {
-            display: inline !important;
-          }
-          .desktop-auth-buttons {
-            display: flex !important;
-          }
-        }
-        
-        @media (max-width: 767px) {
-          .mobile-menu-button {
-            display: block !important;
-          }
-          .desktop-username {
-            display: none !important;
-          }
-          .desktop-auth-buttons {
-            display: none !important;
-          }
-        }
-      `}</style>
+      </Drawer>
     </Header>
   );
+};
+
+const headerStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '0 24px',
+  background: '#001529',
 };
 
 export default Navbar;

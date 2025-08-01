@@ -16,10 +16,8 @@ const Login = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      const result = await axios.post(
-        'http://localhost:5000/api/auth/login',
-        values
-      );
+      const result = await axios.post('http://localhost:8080/api/auth/login', values);
+
       
       if (result.data.token && result.data.user) {
         login(result.data.user, result.data.token);
