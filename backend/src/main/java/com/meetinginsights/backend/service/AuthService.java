@@ -1,54 +1,38 @@
 package com.meetinginsights.backend.service;
 
-import com.meetinginsights.backend.dto.AuthRequest;
 import com.meetinginsights.backend.dto.RegisterRequest;
-import com.meetinginsights.backend.dto.AuthResponse;
-import com.meetinginsights.backend.entity.Role;
-import com.meetinginsights.backend.entity.User;
+import com.meetinginsights.backend.entity.User; // ✅ Correct
 import com.meetinginsights.backend.repository.UserRepository;
 import com.meetinginsights.backend.security.JwtUtil;
-import lombok.RequiredArgsConstructor;
+import com.meetinginsights.backend.exception.EmailAlreadyExistsException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    @Autowired
+    private UserRepository userRepository;
 
-    public AuthResponse register(RegisterRequest request) {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    public String register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new EmailAlreadyExistsException("Email already registered");
         }
 
-        User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .build();
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setName(request.getName());
+        user.setRoles("USER");
 
         userRepository.save(user);
-
-        String token = jwtUtil.generateToken(user.getEmail());
-
-        return new AuthResponse(token);
-    }
-
-    // ✅ Login method
-    public AuthResponse login(AuthRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-
-        String token = jwtUtil.generateToken(user.getEmail());
-
-        return new AuthResponse(token);
+        return jwtUtil.generateToken(user.getEmail(), List.of("USER"), false);
     }
 }
