@@ -1,7 +1,7 @@
 package com.meetinginsights.backend.controller;
 
-import com.meetinginsights.backend.dto.AuthRequest;
 import com.meetinginsights.backend.dto.AuthResponse;
+import com.meetinginsights.backend.dto.LoginRequest;
 import com.meetinginsights.backend.dto.RegisterRequest;
 import com.meetinginsights.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +20,8 @@ public class AuthController {
         return ResponseEntity.ok(authService.register(request));
     }
 
-
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }
-
-
-
