@@ -1,6 +1,5 @@
 package com.meetinginsights.backend.service;
 
-import com.meetinginsights.backend.dto.AuthResponse;
 import com.meetinginsights.backend.dto.LoginRequest;
 import com.meetinginsights.backend.dto.RegisterRequest;
 import com.meetinginsights.backend.entity.Role;
@@ -8,67 +7,58 @@ import com.meetinginsights.backend.entity.User;
 import com.meetinginsights.backend.repository.RoleRepository;
 import com.meetinginsights.backend.repository.UserRepository;
 import com.meetinginsights.backend.security.JwtUtil;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
+                       AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.authenticationManager = authenticationManager;
+    }
 
     public String register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("User already exists with email: " + request.getEmail());
+            throw new RuntimeException("Email already exists");
         }
+
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
 
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
-        Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
-
-        user.setRoles(List.of(userRole));
+        user.setRoles(Collections.singleton(userRole));
         userRepository.save(user);
 
-        List<String> roleNames = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toList());
-
-        return jwtUtil.generateToken(user.getEmail(), roleNames);
+        return jwtUtil.generateToken(user.getEmail(), user.getRoleNames(), false);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public String login(LoginRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
-        }
-
-        List<String> roleNames = user.getRoles()
-                .stream()
-                .map(Role::getName)
-                .collect(Collectors.toList());
-
-        String token = jwtUtil.generateToken(user.getEmail(), roleNames);
-        return new AuthResponse(token);
+        return jwtUtil.generateToken(user.getEmail(), user.getRoleNames(), false);
     }
-
 }
-
