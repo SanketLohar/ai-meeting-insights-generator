@@ -1,29 +1,30 @@
 package com.meetinginsights.backend.dto;
 
 public class TokenResponse {
-    private String accessToken;
-    private String refreshToken;
+    private String token;
+    private String role;
 
-    public TokenResponse() {}
-
-    public TokenResponse(String accessToken, String refreshToken) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
+    public TokenResponse() {
     }
 
-    public String getAccessToken() {
-        return accessToken;
+    public TokenResponse(String token, String role) {
+        this.token = token;
+        this.role = role;
     }
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
+    public String getToken() {
+        return token;
     }
 
-    public String getRefreshToken() {
-        return refreshToken;
+    public void setToken(String token) {
+        this.token = token;
     }
 
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -4,17 +4,16 @@ import com.meetinginsights.backend.dto.LoginRequest;
 import com.meetinginsights.backend.dto.RegisterRequest;
 import com.meetinginsights.backend.entity.Role;
 import com.meetinginsights.backend.entity.User;
-import com.meetinginsights.backend.repository.RoleRepository;
 import com.meetinginsights.backend.repository.UserRepository;
 import com.meetinginsights.backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -23,16 +22,13 @@ public class AuthService {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private JwtUtil jwtUtil;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private AuthenticationManager authManager;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    private AuthenticationManager authenticationManager;
 
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -42,25 +38,38 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setName(request.getName());
-
-        Role role = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Default USER role not found"));
-        user.getRoles().add(role);
+        user.setRoles(Collections.singleton(Role.USER));
 
         userRepository.save(user);
     }
 
     public String login(LoginRequest request) {
-        Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
         );
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+        if (userOptional.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
 
-        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+        User user = userOptional.get();
+        return jwtUtil.generateToken(user.getEmail(), user.getRoles(), false);
+    }
 
-        return jwtUtil.generateToken(user.getEmail(), roles, true);
+    public String getRoleByEmail(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            return userOptional.get().getRoles().stream()
+                    .findFirst()
+                    .map(Enum::name)
+                    .orElse("USER");
+        }
+        return "USER";
     }
 }
+
+

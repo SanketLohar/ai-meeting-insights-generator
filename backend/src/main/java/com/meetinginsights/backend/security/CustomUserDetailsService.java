@@ -1,4 +1,4 @@
-package com.meetinginsights.backend.security;
+package com.meetinginsights.backend.service;
 
 import com.meetinginsights.backend.entity.User;
 import com.meetinginsights.backend.repository.UserRepository;
@@ -14,12 +14,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-        return new CustomUserDetails(user); // ✅ Now wraps User
+        return user; // Your User must implement UserDetails
     }
-
 }
