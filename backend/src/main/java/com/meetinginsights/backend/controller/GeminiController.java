@@ -24,4 +24,5 @@ public class GeminiController {
             return ResponseEntity.status(500).body("Error generating insights: " + e.getMessage());
         }
     }
+
 }
