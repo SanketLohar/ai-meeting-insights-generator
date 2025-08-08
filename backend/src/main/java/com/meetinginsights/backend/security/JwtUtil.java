@@ -1,76 +1,57 @@
 package com.meetinginsights.backend.security;
 
 import com.meetinginsights.backend.entity.Role;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.*;
+import java.util.Date;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
 
+    @Value("${jwt.secret}")
+    private String secret;
+
     private Key key;
 
     @PostConstruct
     public void init() {
-        key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // ✅ For Spring Security-based token generation
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(userDetails.getUsername(), extractRoles(userDetails), false);
-    }
-
-    // ✅ Custom version with roles and refresh token flag
     public String generateToken(String email, Set<Role> roles, boolean isRefreshToken) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", roles.stream().map(Enum::name).collect(Collectors.toList()));
-        claims.put("type", isRefreshToken ? "refresh" : "access");
+        long expiration = isRefreshToken ? 1000 * 60 * 60 * 24 * 7 : 1000 * 60 * 60; // 1 hour or 7 days
+
+        String roleString = roles.stream()
+                .map(Role::getName)
+                .collect(Collectors.joining(","));
 
         return Jwts.builder()
-                .setClaims(claims)
                 .setSubject(email)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + (isRefreshToken ? 1000 * 60 * 60 * 24 * 7 : 1000 * 60 * 60))) // 1hr or 7 days
-                .signWith(key)
+                .claim("roles", roleString)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractEmail(String token) {
+    public String extractUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    public List<String> extractRoles(String token) {
-        Object roles = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().get("roles");
-
-        if (roles instanceof List<?>) {
-            return ((List<?>) roles).stream().map(String::valueOf).collect(Collectors.toList());
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
         }
-        return Collections.emptyList();
-    }
-
-    private Set<Role> extractRoles(UserDetails userDetails) {
-        return userDetails.getAuthorities().stream()
-                .map(auth -> Role.valueOf(auth.getAuthority()))
-                .collect(Collectors.toSet());
-    }
-
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractEmail(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-    }
-
-    private boolean isTokenExpired(String token) {
-        Date expiration = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().getExpiration();
-        return expiration.before(new Date());
     }
 }
