@@ -1,4 +1,4 @@
-package com.meetinginsights.backend.service;
+package com.backend.demo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.util.Base64;
 
 @Service
@@ -18,56 +20,79 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
-    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public String extractInsightsFromAudio(MultipartFile file) throws Exception {
-        // Convert file to Base64
-        byte[] fileBytes = file.getBytes();
-        String base64Audio = Base64.getEncoder().encodeToString(fileBytes);
+    // 🔹 Step 1: Convert audio file to text using Gemini Speech-to-Text
+    public String transcribeAudio(MultipartFile audioFile) throws IOException, InterruptedException {
+        byte[] audioBytes = audioFile.getBytes();
+        String base64Audio = Base64.getEncoder().encodeToString(audioBytes);
 
-        String prompt = """
-        You are a highly intelligent meeting assistant. Below is the base64-encoded audio from a business meeting. 
-        Assume it is a decoded speech-to-text transcript in natural conversation format. Do not attempt to decode base64.
-
-        Please analyze the content and extract insights in the following format:
-
-        1. 🔍 **Summary**: A concise overview of the meeting in 3-5 bullet points.
-        2. ✅ **Decisions Made**: Clearly mention all finalized decisions.
-        3. 📌 **Action Items**: List tasks assigned to specific people, with deadlines if mentioned.
-        4. 🔄 **Discussion Points**: Capture key conversation points or conflicting ideas.
-        5. 🚀 **Next Steps**: What should be done next based on this meeting?
-
-        Here is the base64 audio (assume it’s a transcript):
-
-        %s
-        """.formatted(base64Audio.replace("\"", "\\\""));
-
-        String jsonRequest = """
+        String transcriptionPayload = """
         {
-          "contents": [
-            {
-              "parts": [
-                {
-                  "text": "%s"
-                }
-              ]
+            "config": {
+                "encoding": "LINEAR16",
+                "languageCode": "en-US"
+            },
+            "audio": {
+                "content": "%s"
             }
-          ]
         }
-        """.formatted(prompt.replace("\"", "\\\""));
+        """.formatted(base64Audio);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(GEMINI_URL + "?key=" + geminiApiKey))
+                .uri(URI.create("https://speech.googleapis.com/v1/speech:recognize?key=" + geminiApiKey))
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
+                .POST(HttpRequest.BodyPublishers.ofString(transcriptionPayload))
                 .build();
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        ObjectMapper objectMapper = new ObjectMapper();
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         JsonNode root = objectMapper.readTree(response.body());
-        JsonNode parts = root.path("candidates").get(0).path("content").path("parts").get(0);
-        return parts.path("text").asText();
+
+        return root.path("results").get(0).path("alternatives").get(0).path("transcript").asText("");
+    }
+
+    // 🔹 Step 2: Generate Insights from Transcription
+    public String generateInsights(String transcript) throws IOException, InterruptedException {
+        String advancedPrompt = """
+        You are an AI meeting assistant.
+        Your job:
+        1. Summarize the meeting in 5 concise bullet points.
+        2. Extract all action items with responsible persons and deadlines (if mentioned).
+        3. Identify decisions taken.
+        4. Highlight key discussion points.
+        5. Suggest possible follow-up actions.
+
+        Meeting Transcript:
+        %s
+        """.formatted(transcript);
+
+        String payload = """
+        {
+            "contents": [{
+                "role": "user",
+                "parts": [{"text": "%s"}]
+            }]
+        }
+        """.formatted(advancedPrompt.replace("\"", "\\\""));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + geminiApiKey))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                .build();
+
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+
+        JsonNode root = objectMapper.readTree(response.body());
+        return root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText("");
+    }
+
+    // 🔹 Step 3: Full Process (Audio → Text → Insights)
+    public String processMeetingAudio(MultipartFile file) throws IOException, InterruptedException {
+        String transcript = transcribeAudio(file);
+        if (transcript.isEmpty()) {
+            return "Transcription failed. Please check the audio quality.";
+        }
+        return generateInsights(transcript);
     }
 }

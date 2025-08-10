@@ -1,4 +1,4 @@
-package com.meetinginsights.backend.service;
+package com.meetinginsights.backend.security;
 
 import com.meetinginsights.backend.entity.User;
 import com.meetinginsights.backend.repository.UserRepository;
