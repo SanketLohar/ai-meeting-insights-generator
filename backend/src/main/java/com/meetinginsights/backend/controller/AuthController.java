@@ -1,33 +1,33 @@
 package com.meetinginsights.backend.controller;
 
-import com.meetinginsights.backend.dto.LoginRequest;
-import com.meetinginsights.backend.dto.RegisterRequest;
-import com.meetinginsights.backend.dto.TokenResponse;
 import com.meetinginsights.backend.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import lombok.Data;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-        authService.register(request);
-        return ResponseEntity.ok("User registered successfully");
+    public String register(@RequestBody AuthRequest request) {
+        return authService.register(request.getUsername(), request.getPassword());
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
-        String token = authService.login(request);
-        String role = authService.getRoleByEmail(request.getEmail());
+    public String login(@RequestBody AuthRequest request) {
+        return authService.login(request.getUsername(), request.getPassword());
+    }
 
-        TokenResponse response = new TokenResponse(token, role);
-        return ResponseEntity.ok(response);
+    @Data
+    public static class AuthRequest {
+        private String username;
+        private String password;
     }
 }

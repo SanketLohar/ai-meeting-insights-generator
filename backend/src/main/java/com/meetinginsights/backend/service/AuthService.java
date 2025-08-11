@@ -1,56 +1,46 @@
 package com.meetinginsights.backend.service;
 
-import com.meetinginsights.backend.dto.LoginRequest;
-import com.meetinginsights.backend.dto.RegisterRequest;
-import com.meetinginsights.backend.entity.Role;
 import com.meetinginsights.backend.entity.User;
-import com.meetinginsights.backend.repository.RoleRepository;
 import com.meetinginsights.backend.repository.UserRepository;
 import com.meetinginsights.backend.security.JwtUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
-    public void register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("User already exists with email: " + request.getEmail());
-        }
-
-        Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
-
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Collections.singleton(userRole));
-        userRepository.save(user);
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
     }
 
-    public String login(LoginRequest request) {
+    public String register(String username, String password) {
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+        User user = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .role("USER")
+                .build();
+        userRepository.save(user);
+        return "User registered successfully";
+    }
+
+    public String login(String username, String password) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
+                new UsernamePasswordAuthenticationToken(username, password)
         );
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return jwtUtil.generateToken(user.getEmail(), user.getRoles(), false);
+        return jwtUtil.generateToken(username);
     }
 }

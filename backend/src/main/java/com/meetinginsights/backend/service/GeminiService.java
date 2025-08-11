@@ -1,4 +1,4 @@
-package com.backend.demo.service;
+package com.meetinginsights.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
