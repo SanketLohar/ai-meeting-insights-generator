@@ -1,19 +1,21 @@
 package com.meetinginsights.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Table(name = "roles")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "roles")
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name; // e.g. ROLE_USER, ROLE_ADMIN
+    @Column(unique = true, nullable = false)
+    private String name;
 }

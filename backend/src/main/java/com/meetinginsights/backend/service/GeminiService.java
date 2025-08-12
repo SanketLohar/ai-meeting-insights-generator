@@ -17,7 +17,7 @@ import java.util.Base64;
 @Service
 public class GeminiService {
 
-    @Value("${gemini.api.key}")
+    @Value("${GEMINI_API_KEY}")
     private String geminiApiKey;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
