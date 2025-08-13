@@ -14,18 +14,16 @@ public class RoleSeeder {
 
     @PostConstruct
     public void seedRoles() {
-        if (!roleRepository.existsByName("ROLE_USER")) {
-            Role userRole = new Role();
-            userRole.setName("ROLE_USER");
-            roleRepository.save(userRole);
-        }
+        createRoleIfNotFound("ROLE_USER");
+        createRoleIfNotFound("ROLE_ADMIN");
+    }
 
-        if (!roleRepository.existsByName("ROLE_ADMIN")) {
-            Role adminRole = new Role();
-            adminRole.setName("ROLE_ADMIN");
-            roleRepository.save(adminRole);
+    private void createRoleIfNotFound(String roleName) {
+        if (!roleRepository.existsByName(roleName)) {
+            Role role = new Role();
+            role.setName(roleName);
+            roleRepository.save(role);
+            System.out.println("✅ Inserted role: " + roleName);
         }
-
-        System.out.println("✅ Default roles seeded.");
     }
 }

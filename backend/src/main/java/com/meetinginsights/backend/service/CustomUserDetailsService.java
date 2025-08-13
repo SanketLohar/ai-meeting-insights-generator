@@ -3,24 +3,23 @@ package com.meetinginsights.backend.service;
 import com.meetinginsights.backend.entity.User;
 import com.meetinginsights.backend.repository.UserRepository;
 import com.meetinginsights.backend.security.CustomUserDetails;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public CustomUserDetailsService(UserRepository userRepository) { this.userRepository = userRepository; }
-
+    // Spring Security will supply "username"; we’ll try username first, then email.
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        // support login by username or email
         User user = userRepository.findByUsername(usernameOrEmail)
-                .or(() -> userRepository.findByEmail(usernameOrEmail))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
+                .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail)));
+
         return new CustomUserDetails(user);
     }
 }
