@@ -6,67 +6,66 @@ import com.meetinginsights.backend.repository.RoleRepository;
 import com.meetinginsights.backend.repository.UserRepository;
 import com.meetinginsights.backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder; // make sure you’ve defined a bean in SecurityConfig
-    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
-    public Map<String, Object> register(String username, String email, String rawPassword) {
-        if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username already exists");
+    /**
+     * Registers the user with default ROLE_USER and returns a JWT containing roles.
+     */
+    public String register(User user) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists");
         }
-        if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(rawPassword));
-
+        // encode password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // ensure default role
         Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new IllegalStateException("ROLE_USER not seeded"));
-        user.getRoles().add(userRole);
+                .orElseThrow(() -> new RuntimeException("ROLE_USER not found. Seed roles first."));
+        user.setRoles(Set.of(userRole));
 
         userRepository.save(user);
 
-        List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
-        String token = jwtUtil.generateToken(user.getUsername(), roleNames);
-
-        Map<String, Object> resp = new LinkedHashMap<>();
-        resp.put("token", token);
-        resp.put("username", user.getUsername());
-        resp.put("email", user.getEmail());
-        resp.put("roles", roleNames);
-        return resp;
+        List<String> roles = user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
+        return jwtUtil.generateToken(user.getEmail(), roles);
     }
 
-    public Map<String, Object> login(String usernameOrEmail, String rawPassword) {
-        User user = userRepository.findByUsername(usernameOrEmail)
-                .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
-                        .orElseThrow(() -> new IllegalArgumentException("Bad credentials")));
+    /**
+     * Authenticates and returns a JWT containing roles.
+     */
+    public String login(String email, String password) {
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password)
+        );
 
-        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Bad credentials");
-        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<String> roleNames = user.getRoles().stream().map(Role::getName).toList();
-        String token = jwtUtil.generateToken(user.getUsername(), roleNames);
+        List<String> roles = user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
+        return jwtUtil.generateToken(email, roles);
+    }
 
-        Map<String, Object> resp = new LinkedHashMap<>();
-        resp.put("token", token);
-        resp.put("username", user.getUsername());
-        resp.put("email", user.getEmail());
-        resp.put("roles", roleNames);
-        return resp;
+    public List<String> rolesFromToken(String token) {
+        return jwtUtil.extractRoles(token);
+    }
+
+    public String usernameByEmail(String email) {
+        return userRepository.findByEmail(email).map(User::getUsername).orElse(email);
     }
 }
