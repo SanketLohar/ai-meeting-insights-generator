@@ -1,9 +1,12 @@
 package com.meetinginsights.backend.security;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,48 +16,60 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    // property name: jwt.expiration-ms
+    @Value("${jwt.expiration-ms}")
+    private long expirationMs;
+
+    private Key signingKey() {
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
 
     public String generateToken(String username, Set<String> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
+
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + expirationMs);
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS256, secret)
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .signWith(signingKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+    public Jws<Claims> parseToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(signingKey())
+                .build()
+                .parseClaimsJws(token);
     }
 
+    public String extractUsername(String token) {
+        return parseToken(token).getBody().getSubject();
+    }
+
+    @SuppressWarnings("unchecked")
     public Set<String> extractRoles(String token) {
-        Object rolesObj = extractAllClaims(token).get("roles");
-        if (rolesObj instanceof List<?>) {
-            return ((List<?>) rolesObj).stream()
+        Object r = parseToken(token).getBody().get("roles");
+        if (r instanceof Collection<?>) {
+            return ((Collection<?>) r).stream()
                     .filter(String.class::isInstance)
                     .map(String.class::cast)
                     .collect(Collectors.toSet());
         }
-        return new HashSet<>();
+        return Collections.emptySet();
     }
 
-    public boolean validateToken(String token, String username) {
-        return username.equals(extractUsername(token)) && !isTokenExpired(token);
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
+    public boolean isTokenValid(String token) {
+        try {
+            parseToken(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
     }
 }
