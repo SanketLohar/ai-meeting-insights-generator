@@ -10,12 +10,15 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // store strings like "ROLE_USER", "ROLE_ADMIN"
     @Column(nullable = false, unique = true)
-    private String name;
+    private String name; // Example: ROLE_USER, ROLE_ADMIN
 
-    // Getters & setters
+    public Role() {}
+    public Role(String name) { this.name = name; }
+
+    // Getters & Setters
     public Long getId() { return id; }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 }
