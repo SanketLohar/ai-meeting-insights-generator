@@ -7,7 +7,6 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,15 +26,7 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    public User() {}
-
-    public User(String username, String email, String password) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-    }
-
-    // ✅ Getters and Setters
+    // ✅ Getters and setters
     public Long getId() {
         return id;
     }
@@ -52,7 +43,7 @@ public class User {
         this.username = username;
     }
 
-    public String getEmail() {   // 👈 This removes your redline
+    public String getEmail() {   // ✅ This fixes "user.getEmail redline"
         return email;
     }
 
