@@ -25,12 +25,15 @@ public class AuthService {
     private UserRepository userRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtUtil jwtUtil;
 
-    public AuthResponse register(RegisterRequest request) {
+    public String register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("User already exists with email: " + request.getEmail());
         }
@@ -38,43 +41,18 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
 
-        // Assign default role "USER"
-        Role defaultRole = new Role();
-        defaultRole.setName("USER");
-        user.setRoles(List.of(defaultRole));
+        // ✅ Fix: Assign default role as a Set<Role>
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Role USER not found"));
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+        user.setRoles(roles);
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toList()));
-
-        List<String> roleNames = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toList());
-
-        return new AuthResponse(token, user.getId(), user.getEmail(),
-                "User registered successfully", roleNames);
-    }
-
-    public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
-        }
-
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toList()));
-
-        List<String> roleNames = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toList());
-
-        return new AuthResponse(token, user.getId(), user.getEmail(),
-                "Login successful", roleNames);
+        return jwtUtil.generateToken(user.getEmail(), user.getRoles());
     }
 }
