@@ -13,12 +13,12 @@ public class RoleSeeder {
 
     @PostConstruct
     public void seed() {
-        if (!roleRepository.existsByName("ROLE_USER")) {
+        if (roleRepository.findByName("ROLE_USER").isEmpty()) {
             Role r = new Role();
             r.setName("ROLE_USER");
             roleRepository.save(r);
         }
-        if (!roleRepository.existsByName("ROLE_ADMIN")) {
+        if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
             Role r = new Role();
             r.setName("ROLE_ADMIN");
             roleRepository.save(r);

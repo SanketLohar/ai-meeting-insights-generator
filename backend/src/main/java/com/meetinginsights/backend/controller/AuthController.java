@@ -5,7 +5,6 @@ import com.meetinginsights.backend.dto.LoginRequest;
 import com.meetinginsights.backend.dto.RegisterRequest;
 import com.meetinginsights.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,11 +17,16 @@ public class AuthController {
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest request) {
-        return authService.register(request);
+        String token = authService.register(request);
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        return response;
     }
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
-        return authService.login(request);
+        // Implement login logic in AuthService if not already present
+        // For now, throw an exception to indicate it's not implemented
+        throw new UnsupportedOperationException("Login functionality not implemented yet.");
     }
 }

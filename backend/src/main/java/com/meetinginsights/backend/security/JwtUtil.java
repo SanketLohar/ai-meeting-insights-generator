@@ -25,9 +25,25 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username, Set<String> roles) {
+    // Accepts Set<Role> or Set<String> for roles, but always serializes as Set<String>
+    public String generateToken(String username, Set<?> roles) {
+        Set<String> roleNames = roles.stream()
+                .map(role -> {
+                    if (role instanceof String) {
+                        return (String) role;
+                    } else {
+                        try {
+                            // Try to call getName() if it's a Role object
+                            return (String) role.getClass().getMethod("getName").invoke(role);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Role must be String or have getName()", e);
+                        }
+                    }
+                })
+                .collect(Collectors.toSet());
+
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", roles);
+        claims.put("roles", roleNames);
 
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMs);
@@ -57,8 +73,7 @@ public class JwtUtil {
         Object r = parseToken(token).getBody().get("roles");
         if (r instanceof Collection<?>) {
             return ((Collection<?>) r).stream()
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
+                    .map(Object::toString)
                     .collect(Collectors.toSet());
         }
         return Collections.emptySet();
