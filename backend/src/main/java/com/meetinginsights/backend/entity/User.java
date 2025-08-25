@@ -11,7 +11,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String username;
+
+    private String firstName; // Added
+    private String lastName;  // Added
+
+    @Column(name = "full_name", nullable = false) // Mapped to 'full_name' column and set as non-nullable
+    private String fullName;  // Added to correspond to database column
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -26,7 +33,7 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    // ✅ Getters and setters
+    // Getters and setters
     public Long getId() {
         return id;
     }
@@ -43,7 +50,17 @@ public class User {
         this.username = username;
     }
 
-    public String getEmail() {   // ✅ This fixes "user.getEmail redline"
+    // Added getters and setters for firstName, lastName, fullName
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+
+    public String getEmail() {
         return email;
     }
 

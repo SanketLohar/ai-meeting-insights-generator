@@ -1,17 +1,24 @@
 package com.meetinginsights.backend.service;
 
+import com.meetinginsights.backend.dto.AuthResponse;
+import com.meetinginsights.backend.dto.LoginRequest;
 import com.meetinginsights.backend.dto.RegisterRequest;
 import com.meetinginsights.backend.entity.Role;
 import com.meetinginsights.backend.entity.User;
-import com.meetinginsights.backend.repository.UserRepository;
 import com.meetinginsights.backend.repository.RoleRepository;
-import com.meetinginsights.backend.security.JwtUtil;
+import com.meetinginsights.backend.repository.UserRepository;
+import com.meetinginsights.backend.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -26,61 +33,63 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     public String register(RegisterRequest request) {
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty.");
+        }
+        if (request.getFirstName() == null || request.getFirstName().trim().isEmpty()) { // New check
+            throw new IllegalArgumentException("First name cannot be null or empty.");
+        }
+        if (request.getLastName() == null || request.getLastName().trim().isEmpty()) { // New check
+            throw new IllegalArgumentException("Last name cannot be null or empty.");
+        }
+
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("User already exists with email: " + request.getEmail());
+            throw new RuntimeException("Email is already taken!");
+        }
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username is already taken!");
         }
 
         User user = new User();
+        user.setUsername(request.getUsername());
+        user.setFirstName(request.getFirstName()); // Set firstName
+        user.setLastName(request.getLastName());   // Set lastName
+        user.setFullName(request.getFirstName() + " " + request.getLastName()); // ⭐ Compose and set fullName ⭐
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        // Set firstName and lastName if available in RegisterRequest and User
-        // Remove try-catch and check for method existence
-        // If RegisterRequest does not have getFirstName/getLastName, set to null or skip
-        // If User does not have setFirstName/setLastName, skip
-
-        // Assuming RegisterRequest has getFirstName() and getLastName()
-        // and User has setFirstName() and setLastName()
-        // If not, comment out or set to null as fallback
-
-        // Set firstName
-        String firstName = null;
-        try {
-            firstName = (String) RegisterRequest.class.getMethod("getFirstName").invoke(request);
-        } catch (Exception e) {
-            // Method does not exist or error, leave as null
-        }
-        try {
-            User.class.getMethod("setFirstName", String.class).invoke(user, firstName);
-        } catch (Exception e) {
-            // Method does not exist, skip
-        }
-
-        // Set lastName
-        String lastName = null;
-        try {
-            lastName = (String) RegisterRequest.class.getMethod("getLastName").invoke(request);
-        } catch (Exception e) {
-            // Method does not exist or error, leave as null
-        }
-        try {
-            User.class.getMethod("setLastName", String.class).invoke(user, lastName);
-        } catch (Exception e) {
-            // Method does not exist, skip
-        }
-
-        // Assign default role as a Set<Role>
         Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("Role ROLE_USER not found"));
+                .orElseThrow(() -> new RuntimeException("Error: Role 'ROLE_USER' is not found. Please ensure it exists."));
         Set<Role> roles = new HashSet<>();
         roles.add(userRole);
         user.setRoles(roles);
 
         userRepository.save(user);
 
-        return jwtUtil.generateToken(user.getEmail(), user.getRoles());
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+        return jwtService.generateToken(user.getEmail(), roleNames);
+    }
+
+    public String login(LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found after authentication!"));
+
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+        return jwtService.generateToken(request.getEmail(), roleNames);
     }
 }
