@@ -20,7 +20,7 @@ function App() {
       <Router>
         <Layout className="app-layout">
           <Navbar />
-          <Content className="app-content">
+          <Layout className="app-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/generate" element={
@@ -33,7 +33,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Routes>
-          </Content>
+          </Layout>
           <Footer />
         </Layout>
       </Router>

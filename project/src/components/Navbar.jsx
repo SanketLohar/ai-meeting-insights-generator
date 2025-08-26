@@ -60,48 +60,61 @@ const Navbar = () => {
 
   return (
     <Header style={headerStyle}>
-      <div className="logo">
-        <Link to="/" style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
-          Meeting Insights
-        </Link>
-      </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'space-between',
+        height: '100%',
+      }}>
+        <div className="logo" style={{ marginRight: 32 }}>
+          <Link to="/" style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
+            Meeting Insights
+          </Link>
+        </div>
 
-      <div className="desktop-menu">
-        <Menu
-          theme="dark"
-          mode="horizontal"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          style={{ flex: 1 }}
-        />
+        <div className="desktop-menu" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          flex: 1,
+        }}>
+          <Menu
+            theme="dark"
+            mode="horizontal"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            style={{ background: 'transparent', borderBottom: 'none' }}
+          />
 
-        {isAuthenticated ? (
-          <Dropdown menu={{ items: userMenuItems }}>
-            <Button icon={<UserOutlined />} style={{ marginLeft: '1rem' }}>
-              {user?.name || 'Account'}
-            </Button>
-          </Dropdown>
-        ) : (
-          <div style={{ marginLeft: '1rem' }}>
-            <Link to="/login">
-              <Button icon={<LoginOutlined />} type="primary" style={{ marginRight: 8 }}>
-                Login
+          {isAuthenticated ? (
+            <Dropdown menu={{ items: userMenuItems }}>
+              <Button icon={<UserOutlined />} style={{ marginLeft: '1.5rem' }}>
+                {user?.name || 'Account'}
               </Button>
-            </Link>
-            <Link to="/signup">
-              <Button>Sign Up</Button>
-            </Link>
-          </div>
-        )}
-      </div>
+            </Dropdown>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button icon={<LoginOutlined />} type="primary" style={{ marginLeft: '1.5rem' }}>
+                  Login
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button style={{ marginLeft: 8 }}>Sign Up</Button>
+              </Link>
+            </>
+          )}
+        </div>
 
-      <Button
-        className="mobile-menu-button"
-        type="text"
-        icon={<MenuOutlined />}
-        onClick={showDrawer}
-        style={{ color: 'white', display: 'none' }}
-      />
+        <Button
+          className="mobile-menu-button"
+          type="text"
+          icon={<MenuOutlined />}
+          onClick={showDrawer}
+          style={{ color: 'white', display: 'none' }}
+        />
+      </div>
 
       <Drawer
         title="Menu"

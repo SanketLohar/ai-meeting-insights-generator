@@ -18,21 +18,17 @@
 }
 
 .page-container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 24px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .hero-section {
+  background: #f0f5ff;
+  padding: 60px 0 40px 0;
   text-align: center;
-  padding: 80px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  margin-bottom: 40px;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .hero-title {
@@ -53,6 +49,7 @@
   padding: 24px;
   height: 100%;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 260px;
 }
 
 .feature-card:hover {
