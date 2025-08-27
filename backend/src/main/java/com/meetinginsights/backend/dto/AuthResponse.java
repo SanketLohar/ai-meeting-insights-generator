@@ -1,8 +1,16 @@
 package com.meetinginsights.backend.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class AuthResponse {
     private String token;
-    private String type = "Bearer"; // Default type for JWT tokens
+    private String type = "Bearer";
+
+    // ✅ NEW: User details to be sent to the frontend
+    private UserResponse user;
 
     public AuthResponse() {
     }
@@ -26,5 +34,13 @@ public class AuthResponse {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public UserResponse getUser() {
+        return user;
+    }
+
+    public void setUser(UserResponse user) {
+        this.user = user;
     }
 }

@@ -3,6 +3,7 @@ package com.meetinginsights.backend.service;
 import com.meetinginsights.backend.dto.AuthResponse;
 import com.meetinginsights.backend.dto.LoginRequest;
 import com.meetinginsights.backend.dto.RegisterRequest;
+import com.meetinginsights.backend.dto.UserResponse;
 import com.meetinginsights.backend.entity.Role;
 import com.meetinginsights.backend.entity.User;
 import com.meetinginsights.backend.repository.RoleRepository;
@@ -38,14 +39,14 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public String register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty.");
         }
-        if (request.getFirstName() == null || request.getFirstName().trim().isEmpty()) { // New check
+        if (request.getFirstName() == null || request.getFirstName().trim().isEmpty()) {
             throw new IllegalArgumentException("First name cannot be null or empty.");
         }
-        if (request.getLastName() == null || request.getLastName().trim().isEmpty()) { // New check
+        if (request.getLastName() == null || request.getLastName().trim().isEmpty()) {
             throw new IllegalArgumentException("Last name cannot be null or empty.");
         }
 
@@ -58,9 +59,9 @@ public class AuthService {
 
         User user = new User();
         user.setUsername(request.getUsername());
-        user.setFirstName(request.getFirstName()); // Set firstName
-        user.setLastName(request.getLastName());   // Set lastName
-        user.setFullName(request.getFirstName() + " " + request.getLastName()); // ⭐ Compose and set fullName ⭐
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setFullName(request.getFirstName() + " " + request.getLastName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
@@ -75,10 +76,21 @@ public class AuthService {
         Set<String> roleNames = user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
-        return jwtService.generateToken(user.getEmail(), roleNames);
+
+        AuthResponse response = new AuthResponse();
+        response.setToken(jwtService.generateToken(user.getEmail(), roleNames));
+
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(user.getId());
+        userResponse.setUsername(user.getUsername());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setFullName(user.getFullName());
+        response.setUser(userResponse);
+
+        return response;
     }
 
-    public String login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -90,6 +102,19 @@ public class AuthService {
         Set<String> roleNames = user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
-        return jwtService.generateToken(request.getEmail(), roleNames);
+
+        String token = jwtService.generateToken(user.getEmail(), roleNames);
+
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(user.getId());
+        userResponse.setUsername(user.getUsername());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setFullName(user.getFullName());
+        response.setUser(userResponse);
+
+        return response;
     }
 }
