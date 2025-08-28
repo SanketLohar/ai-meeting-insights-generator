@@ -36,7 +36,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                // ⭐ CORRECTED: Apply global CORS configuration to the security filter chain ⭐
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -50,17 +49,15 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ⭐ NEW: Global CORS configuration bean ⭐
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        // Corrected to allow your specific frontend origin
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        source.registerCorsConfiguration("/**", config); // Apply to all paths
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 
