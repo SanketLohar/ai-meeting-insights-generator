@@ -24,13 +24,9 @@ import java.util.stream.Collectors;
 @Service
 public class JwtService {
 
-    // Inject your secret key from application.properties
-    // Expecting a plain string as per JwtUtil's signingKey() method.
     @Value("${jwt.secret}")
     private String secret;
 
-    // Inject token expiration time in milliseconds from application.properties
-    // Property name is "jwt.expiration-ms".
     @Value("${jwt.expiration-ms}")
     private long expirationMs;
 
