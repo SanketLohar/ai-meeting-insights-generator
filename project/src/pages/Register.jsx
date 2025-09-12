@@ -16,9 +16,25 @@ const Register = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      const result = await axios.post('http://localhost:8080/api/auth/register', values);
+      // Parse the full name into first name and last name
+      const nameParts = values.name.trim().split(" ");
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(" ") || " ";
 
-      
+      // Create a username by removing spaces and converting to lowercase
+      const username = values.name.replace(/\s+/g, '').toLowerCase();
+
+      // Prepare payload matching backend's expected structure
+      const payload = {
+        username,
+        firstName,
+        lastName,
+        email: values.email,
+        password: values.password
+      };
+
+      const result = await axios.post('http://localhost:8080/api/auth/register', payload);
+
       if (result.data.token && result.data.user) {
         login(result.data.user, result.data.token);
         message.success('Registration successful! Welcome aboard!');

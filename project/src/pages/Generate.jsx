@@ -29,11 +29,10 @@ const Generate = () => {
 
     try {
       const formData = new FormData();
-      // ⭐ CORRECTED: Use the correct key 'file' to match the backend @RequestParam ⭐
       formData.append('file', audioFile);
 
       const result = await axios.post(
-        // ⭐ CORRECTED: Use the correct backend endpoint URL for GeminiController ⭐
+        // ⭐ CORRECTED: Use the absolute URL to the backend server ⭐
         'http://localhost:8080/api/gemini/upload-audio',
         formData,
         {
@@ -48,7 +47,6 @@ const Generate = () => {
         }
       );
       
-      // ⭐ UPDATED: Check for data before setting response to avoid errors ⭐
       if (result.data) {
         setResponse(result.data);
       } else {
@@ -85,6 +83,13 @@ const Generate = () => {
       setAudioFile(file);
       return false; // Prevent automatic upload
     },
+    onChange: (info) => {
+      if (info.file.status === 'removed') {
+        setAudioFile(null);
+      } else if (info.file.status === 'done' || info.file.status === 'uploading' || info.file.status === 'error') {
+        setAudioFile(info.file.originFileObj || info.file);
+      }
+    },
     onRemove: () => {
       setAudioFile(null);
     },
@@ -109,7 +114,6 @@ const Generate = () => {
           size="large"
         >
           <Form.Item
-            name="audioFile"
             label={<Text strong>Meeting Audio File</Text>}
             rules={[
               {
@@ -118,7 +122,11 @@ const Generate = () => {
               },
             ]}
           >
-            <Dragger {...uploadProps} style={{ padding: '20px' }}>
+            <Dragger
+              {...uploadProps}
+              fileList={audioFile ? [audioFile] : []}
+              style={{ padding: '20px' }}
+            >
               <p className="ant-upload-drag-icon">
                 <InboxOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
               </p>
@@ -188,7 +196,7 @@ const Generate = () => {
               <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
                 {response}
               </div>
-          </div>
+            </div>
           </>
         )}
       </Card>
