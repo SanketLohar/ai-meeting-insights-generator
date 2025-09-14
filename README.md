@@ -1,4 +1,4 @@
-# AI Meeting Insights Generator ✨
+# AI Meeting Insights Generator 
 
 > An intelligent web application that leverages the OpenAI API to transcribe, summarize, and generate actionable insights from your recorded meetings.
 
@@ -15,7 +15,7 @@
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 *A few screenshots of the application's user interface.*
 
@@ -23,13 +23,13 @@
 
 ---
 
-## 🎯 The Problem
+##  The Problem
 
 After a long meeting, it can be time-consuming to re-listen to the recording to extract key decisions, action items, and important takeaways. This manual process is inefficient and can lead to missed details. The AI Meeting Insights Generator solves this by automating the entire process, providing clear, concise, and actionable summaries in seconds.
 
 ---
 
-## ✨ Features
+## Features
 
 * **🎙️ Audio Transcription:** Upload meeting audio files (like `.mp3`, `.wav`, `.m4a`) for fast and accurate transcription.
 * **🤖 AI-Powered Summaries:** Instantly generate concise summaries to capture the essence of the conversation.
@@ -39,7 +39,7 @@ After a long meeting, it can be time-consuming to re-listen to the recording to 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 * **Framework:** Next.js / React
@@ -53,7 +53,7 @@ After a long meeting, it can be time-consuming to re-listen to the recording to 
 
 ---
 
-## ⚙️ Getting Started
+## Getting Started
 
 To get a local copy up and running, follow these simple steps.
 
@@ -88,6 +88,6 @@ To get a local copy up and running, follow these simple steps.
 
 ---
 
-## 📄 License
+## License
 
 This project is distributed under the MIT License. See `LICENSE` for more information.
