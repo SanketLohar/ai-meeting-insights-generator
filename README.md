@@ -46,11 +46,13 @@ After a long meeting, it can be time-consuming to re-listen to the recording to 
 * **Framework:** Next.js / React
 * **Styling:** Tailwind CSS
 * **State Management:** React Hooks
+*  **Deployment**: Vercel
+
 
 ### Backend
 * **Framework:** Next.js API Routes
 * **AI Integration:** OpenAI API (Whisper for transcription, GPT for insights)
-* **Deployment**: Vercel
+* **Deployment**: Render
 
 ---
 
