@@ -10,7 +10,7 @@
 
 ---
 
-## 🚀 Live Demo
+##  Live Demo
 
 **[YOUR VERCEL DEPLOYMENT URL HERE]**
 
@@ -32,10 +32,10 @@ After a long meeting, it can be time-consuming to re-listen to the recording to 
 
 ## Features
 
-* **🎙️ Audio Transcription:** Upload meeting audio files (like `.mp3`, `.wav`, `.m4a`) for fast and accurate transcription.
-* **🤖 AI-Powered Summaries:** Instantly generate concise summaries to capture the essence of the conversation.
-* **✅ Action Item Extraction:** Automatically identify and list all tasks and action items discussed.
-* **❓ Suggested Follow-ups:** Generate intelligent follow-up questions to ensure clarity and accountability.
+* ** Audio Transcription:** Upload meeting audio files (like `.mp3`, `.wav`, `.m4a`) for fast and accurate transcription.
+* ** AI-Powered Summaries:** Instantly generate concise summaries to capture the essence of the conversation.
+* ** Action Item Extraction:** Automatically identify and list all tasks and action items discussed.
+* ** Suggested Follow-ups:** Generate intelligent follow-up questions to ensure clarity and accountability.
 * **Modern Interface:** A clean, responsive, and easy-to-use interface built with Next.js and Tailwind CSS.
 
 ---
