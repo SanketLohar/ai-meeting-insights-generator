@@ -1,6 +1,6 @@
 # AI Meeting Insights Generator 
 
-> An intelligent web application that leverages the OpenAI API to transcribe, summarize, and generate actionable insights from your recorded meetings.
+> An intelligent web application that leverages the Gemini API to transcribe, summarize, and generate actionable insights from your recorded meetings.
 
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-F2F4F9?style=for-the-badge&logo=spring&logoColor=6DB33F)](https://spring.io/projects/spring-boot)
