@@ -1,16 +1,31 @@
-# Use a standard Java 17 base image
-# (You can change '17' to match your project's Java version, e.g., 21)
-FROM eclipse-temurin:17-jdk-jammy
+# Stage 1: Build the application with Maven
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
-# Set a working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the built .jar file from your 'target' folder into the container
-# This assumes you have already run 'mvn package' locally or in a build script
-COPY target/*.jar app.jar
+# Copy the pom.xml and download dependencies first to leverage Docker cache
+COPY pom.xml .
+RUN mvn dependency:go-offline
 
-# Tell Docker that your application will run on port 8080
+# Copy the rest of your source code
+COPY src ./src
+
+# Package the application, skipping tests
+RUN mvn package -DskipTests
+
+
+# Stage 2: Create the final, lightweight runtime image
+FROM eclipse-temurin:17-jre-jammy
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the built .jar file from the 'builder' stage
+COPY --from=builder /app/target/*.jar app.jar
+
+# Expose the port the application runs on
 EXPOSE 8080
 
-# The command to run your application when the container starts
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# The command to run the application
+ENTRYPOINT ["java","-jar","/app/app.jar"]
